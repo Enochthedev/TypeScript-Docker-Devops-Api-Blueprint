@@ -1,0 +1,2 @@
+# Rest requests
+This is a collection of rest requests that I use for various tests. I have written these requests to automate tasks that I do frequently asides using postman. To make use of the requests, you can import the requests into postman and use them as you like or you can download [**`REST Client`**](humao.rest-client) for Visual Studio Code and use the requests as you like.

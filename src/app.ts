@@ -6,10 +6,10 @@ import { errorConverter, errorHandler } from './middleware/error'
 import { rateLimit } from 'express-rate-limit'
 
 const app = express()
-const port = process.env.PORT !== '' ? process.env.PORT : '5000'
-const max = process.env.RateLimitMax !== undefined ? parseInt(process.env.RateLimitMax) : 100
-
 dotEnv.config()
+const port = (process.env.PORT != null) ? parseInt(process.env.PORT, 10) : 5000
+// console.log(port)
+const max = process.env.RateLimitMax !== undefined ? parseInt(process.env.RateLimitMax) : 100
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -31,4 +31,8 @@ app.use(errorHandler)
 
 app.listen(port, () => {
   console.log(`ductape-apps-api application is running on port ${port}.`)
+  console.log(`Environment is set to ${process.env.NODE_ENV}.`)
+  console.log(`Localhost address is http://localhost:${port}.`)
+  console.log(`Rate limit is set to ${max} requests per 15 minutes.`)
+  console.log('Press Ctrl+C to quit.')
 })
