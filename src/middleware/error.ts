@@ -2,6 +2,7 @@ import httpStatus from 'http-status'
 import mongoose from 'mongoose'
 // import config from '../../../mainService/src/config/config';
 import ApiError from '../util/ApiError'
+import Config from '../configs/Config'
 import { type NextFunction, type Request, type Response } from 'express'
 
 const errorConverter = (
@@ -18,7 +19,7 @@ const errorConverter = (
         : (error instanceof mongoose.Error
             ? httpStatus.BAD_REQUEST
             : httpStatus.INTERNAL_SERVER_ERROR)
-    const message = error.message ?? httpStatus[statusCode] as string
+    const message = error.message ?? (httpStatus[statusCode] ?? 'Unknown error')
     error = new ApiError(Number(statusCode), message as string, false, error.stack as string)
   }
   next(error)
@@ -31,7 +32,7 @@ const errorHandler = (
   next: NextFunction
 ): void => {
   let { statusCode, message } = err
-  if (process.env.NODE_ENV === 'production' && !err.isOperational) {
+  if (Config.enviroment === 'prod' && !err.isOperational) {
     statusCode = httpStatus.INTERNAL_SERVER_ERROR
     message = httpStatus[httpStatus.INTERNAL_SERVER_ERROR].toString()
   }
@@ -41,13 +42,16 @@ const errorHandler = (
   const response = {
     code: statusCode,
     message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    ...(Config.enviroment === 'dev' && { stack: err.stack })
   }
 
   res.status(statusCode).send(response)
 }
 
+const Forbidden = (message: string): ApiError => new ApiError(httpStatus.FORBIDDEN, message)
+
 export {
   errorConverter,
-  errorHandler
+  errorHandler,
+  Forbidden
 }

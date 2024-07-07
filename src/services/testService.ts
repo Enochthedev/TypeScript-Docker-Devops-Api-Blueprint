@@ -28,17 +28,36 @@ const staticData = [
 
 ]// remove this line after implementing the service, this is just a placeholder for the data and so you can see the response format and tests
 
-class TestService {
-  public async getAllUserService (payload: any): Promise<ApiResponse<any>> {
+const testService = {
+  /**
+   * @method getAllUserService
+   * @async
+   * @returns {Promise<ApiResponse<GetAllUserResponse>>}
+   */
+
+  getAllUserService: async (payload: any): Promise<ApiResponse<any>> => {
     try {
       const data = staticData
       return new ApiResponse(httpStatus.OK, Success(data))
     } catch (error: any) {
       throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error', true)
     }
+  },
+  /**
+   * @method getUpTimeService
+   * @async
+   * @returns {Promise<ApiResponse<GetUpTimeResponse>>}
+   */
+
+  getUpTimeService: async (): Promise<ApiResponse<any>> => {
+    try {
+      const uptime = process.uptime()
+      return new ApiResponse(httpStatus.OK, Success(uptime))
+    } catch (error: any) {
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error', true)
+    }
   }
 
-//   public async getTestServiceById (id: number): Promise
 }
 
-export default new TestService()
+export default testService

@@ -1,16 +1,56 @@
-import jwt from 'jsonwebtoken'
-import type MetaData from '../interfaces/MetaData'
+import jwt, { type JwtPayload, type SignOptions } from 'jsonwebtoken'
+import Config from '../configs/Config'
+import { Forbidden } from '../middleware/error'
+import { TokenType } from '../interfaces/auth/token.interface'
 
-const JWT_SECRET = process.env.JWT_SECRET ?? ''// nullish coalescing operator
-const JWT_EXPIRATION = process.env.JWT_EXPIRATION !== '' ? process.env.JWT_EXPIRATION : ''
+const TokenService = {
+  generateJWT: async (data: JwtPayload, type: TokenType): Promise<string> => {
+    const secret =
+      type === TokenType.REFRESH
+        ? Config.JWTHeader.refreshTokenSecret
+        : Config.JWTHeader.accessTokenSecret
 
-const createToken = (data: MetaData): string => {
-  if (JWT_SECRET === null || JWT_SECRET === undefined || JWT_SECRET === '' ||
-    JWT_EXPIRATION === null || JWT_EXPIRATION === undefined || JWT_EXPIRATION === '') {
-    throw new Error('JWT_SECRET or JWT_EXPIRATION is not set')
+    const expiresIn =
+      type === TokenType.REFRESH
+        ? Config.JWTHeader.refreshTokenExpiration
+        : Config.JWTHeader.accessTokenExpiration
+
+    const token = jwt.sign(data, secret, { expiresIn } satisfies SignOptions)
+    return token
+  },
+  async verifyJWT (token: string, type: TokenType): Promise<JwtPayload> {
+    if (token.length === 0) {
+      throw Forbidden('Invalid or expired token')
+    }
+
+    const secret: string =
+      type === TokenType.REFRESH
+        ? Config.JWTHeader.refreshTokenSecret
+        : Config.JWTHeader.accessTokenSecret
+
+    try {
+      const decoded = jwt.verify(token, secret) as JwtPayload
+
+      if (((decoded?.sub) == null) || typeof decoded.role !== 'string' || ((decoded.exp != null) && Date.now() >= decoded.exp * 1000)) {
+        throw Forbidden('Invalid or expired token')
+      }
+
+      return decoded
+    } catch (error) {
+      throw Forbidden('Invalid or expired token')
+    }
   }
-  const token = jwt.sign(data, JWT_SECRET, { expiresIn: JWT_EXPIRATION })
-  return token
+  /**
+   * remaining tokens will go here
+   * list
+   * 2fa token generation
+   * 2fa token verification
+   * magiclink token generation
+   * magiclink token verification
+   * password reset token generation
+   * password reset token verification
+   */
+
 }
 
-export default createToken
+export default TokenService

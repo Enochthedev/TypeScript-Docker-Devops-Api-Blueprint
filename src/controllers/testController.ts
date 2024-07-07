@@ -18,6 +18,19 @@ class TestController {
       next(error)
     }
   }
+
+  public async getUpTime (req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      // Call the service method to get the uptime
+      const response = await TestService.getUpTimeService()
+
+      // Send the response to the client
+      res.status(response.status).json(response)
+    } catch (error) {
+      // Handle errors
+      next(error)
+    }
+  }
 }
 
 export default new TestController()

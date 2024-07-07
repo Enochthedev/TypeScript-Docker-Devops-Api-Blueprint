@@ -2,17 +2,19 @@ import express from 'express'
 import * as dotEnv from 'dotenv'
 import router from './routes/routes.Config'
 import cors from 'cors'
+import helmet from 'helmet'
 import { errorConverter, errorHandler } from './middleware/error'
 import { rateLimit } from 'express-rate-limit'
+import { connectDB } from './configs/dbConfig'
+import Config from './configs/Config'
 
 const app = express()
 dotEnv.config()
-const port = (process.env.PORT != null) ? parseInt(process.env.PORT, 10) : 5000
-// console.log(port)
-const max = process.env.RateLimitMax !== undefined ? parseInt(process.env.RateLimitMax) : 100
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+void connectDB()
+
+// console.log(port)
+const max = Config.rateLimit.maximum
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -22,17 +24,35 @@ const limiter = rateLimit({
   message: 'Too many requests, please try again later.'
 })
 
-app.use(cors())
+const corsOptions = {
+  origin: '*',
+  optionsSuccessStatus: 200,
+  credentials: true,
+  allowedHeaders: [
+    'X-Requested-With',
+    'Content-Type, Authorization',
+    'Access-Control-Allow-Headers',
+    'at',
+    'rt'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+}
 
+app.use(cors(corsOptions))
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.options('*', cors(corsOptions))
 app.use(router, limiter)
-
+app.use(helmet())
 app.use(errorConverter)
 app.use(errorHandler)
 
-app.listen(port, () => {
-  console.log(`ductape-apps-api application is running on port ${port}.`)
-  console.log(`Environment is set to ${process.env.NODE_ENV}.`)
-  console.log(`Localhost address is http://localhost:${port}.`)
-  console.log(`Rate limit is set to ${max} requests per 15 minutes.`)
+app.listen(Config.serverPort, () => {
+  console.log(`ductape-apps-api application is running on port ${Config.serverPort}.`)
+  console.log(`Environment is set to ${Config.enviroment}.`)
+  console.log(`Localhost address is http://localhost:${Config.serverPort}.`)
+  console.log(`Rate limit is set to ${Config.rateLimit.maximum} requests per 15 minutes.`)
   console.log('Press Ctrl+C to quit.')
+  // log jwt secret and expiration
+  console.log()
 })

@@ -1,9 +1,8 @@
 import { type Request, type Response, type NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
+import Config from '../configs/Config'
 import httpStatus from 'http-status'
 import ApiError from '../util/ApiError'
-
-const JWT_SECRET = process.env.JWT_SECRET !== '' ? process.env.JWT_SECRET : ''
 
 interface CustomRequest extends Request {
   userData?: any
@@ -19,11 +18,8 @@ const authMiddleware = (
     if (token === null || token === undefined || token === '') {
       throw new ApiError(Number(httpStatus.UNAUTHORIZED), 'Missing token')
     }
-    // check if JWT SECRET is set
-    if (JWT_SECRET === '' || JWT_SECRET === undefined) {
-      throw new ApiError(Number(httpStatus.UNAUTHORIZED), 'JWT secret is not set')
-    }
-    const decoded = jwt.verify(token, JWT_SECRET) as Record<string, any>
+
+    const decoded = jwt.verify(token, Config.JWTHeader.accessTokenSecret) as Record<string, any>
     req.userData = decoded
     next()
   } catch (error: any) {
